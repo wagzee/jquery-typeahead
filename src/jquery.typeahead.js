@@ -1,10 +1,10 @@
 /*!
  * jQuery Typeahead
- * Copyright (C) 2017 RunningCoder.org
+ * Copyright (C) 2018 RunningCoder.org
  * Licensed under the MIT license
  *
  * @author Tom Bertrand
- * @version 2.10.4 (2017-10-27)
+ * @version 2.10.4 (2018-2-10)
  * @link http://www.runningcoder.org/jquerytypeahead/
  */
 (function (factory) {
@@ -78,6 +78,7 @@
         filter: true,               // Set to false or function to bypass Typeahead filtering. WARNING: accent, correlativeTemplate, offset & matcher will not be interpreted
         matcher: null,              // Add an extra filtering function after the typeahead functions
         source: null,               // Source of data for Typeahead to filter
+        autoSelectOnResult: false,  // If true on result the first item will be automatically selected/highlighted
         callback: {
             onInit: null,               // When Typeahead is first initialized (happens only once)
             onReady: null,              // When the Typeahead initial preparation is completed
@@ -1755,6 +1756,16 @@
             item.addClass("active");
         },
 
+        selectFirstItem: function() {
+            if (!this.options.autoSelectOnResult) { return }
+
+            var itemList = this.resultContainer
+                .find("." + this.options.selector.item)
+                .not("[disabled]");
+            this.clearActiveItem();
+            this.addActiveItem(itemList.first());
+        },
+
         searchResult: function () {
             this.resetLayout();
 
@@ -3198,11 +3209,24 @@
         },
 
         showLayout: function () {
-            if (this.container.hasClass("result") ||
+            var hasClassResult = this.container.hasClass('result');
+            //
+            // select first item, if any found
+            //
+            if (hasClassResult) {
+                this.selectFirstItem();
+            }
+            //
+            // layout already displayed, nothing to do
+            //
+            if (hasClassResult ||
                 (
                     !this.result.length && !this.options.emptyTemplate && !this.options.backdropOnFocus
                 )
             ) return;
+            //
+            // layout showed for first time,
+            //
 
             _addHtmlListeners.call(this);
 
@@ -3220,6 +3244,8 @@
                         : ""
                 ].join(" ")
             );
+
+            this.selectFirstItem();
 
             this.helper.executeCallback.call(
                 this,
